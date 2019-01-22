@@ -6,15 +6,19 @@ require 'json'
 require 'google_drive'
 require 'csv'
 
+#Create scrapper class
 class Scrapper
 
+  #variables to connect with website
   @@page_mairie_arronville = Nokogiri::HTML(open('http://annuaire-des-mairies.com/95/arronville.html'))
   @@annuaire_valdoise = Nokogiri::HTML(open('http://annuaire-des-mairies.com/val-d-oise.html'))
 
+  #Find email of townhall
   def get_townhall_email(townhall_url)
     return townhall_url.xpath('/html/body/div/main/section[2]/div/table/tbody/tr[4]/td[2]').text
   end
 
+  #Find townhall names and collect in an array
   def get_townhall_name(annuaire)
       town_list =[]
       annuaire.xpath('//p/a').each do |el|
@@ -23,6 +27,7 @@ class Scrapper
       return town_list
   end
 
+  #Find urls of each townhall and collect them in an array
   def get_townhall_url(annuaire)
     town_list_url =[]
     annuaire.xpath('//p/a').each do |el|
@@ -32,6 +37,7 @@ class Scrapper
     return town_list_url
   end
 
+  #Scrapping of all emails and collect them in an array
   def get_town_list_mail(annuaire)
     puts "Pose toi, notre scribe est entrain de tout scraper à la main..."
     town_list_mail =[]
@@ -43,6 +49,7 @@ class Scrapper
     return town_list_mail
   end
 
+  #Create array of hashes with the list of townhalls' names and townhall's mails
   def get_city_email_final(annuaire)
   town_with_mail = get_townhall_name(annuaire).zip(get_town_list_mail(annuaire))
   final_array = []
@@ -52,7 +59,7 @@ class Scrapper
     return final_array
   end
 
-  # Save as a text format
+  # Save as a text format in JSON
   def save_as_JSON(array)
     final_array = array
     File.open("db/emails.json", "w") do |town|
@@ -60,17 +67,19 @@ class Scrapper
     end
   end
 
-  # Scrap emails with in Google API
+  # Save with Google API
   def save_as_spreedsheet(array)
 
     session = GoogleDrive::Session.from_config("config.json")
     ws = session.spreadsheet_by_key("1jCyeGCeITqEWCu5r4NaTE8TxD0WHa9PNwuY93XP_Y2w").worksheets[0]
 
     final_array = array
-
+    
+    #Titles of Columns
     ws[1, 1] = "Nom des Villes"
     ws[1, 2] = "Emails des Villes"
 
+    #Print each name (keys) and mail (values) in the file
     row = 3
     final_array.each do |x| 
     ws[row, 1] = x.keys.join
@@ -83,9 +92,11 @@ class Scrapper
     ws.reload
     end
 
-  # Scrap in a .csv file
+  # Save in a .csv file
   def save_as_csv(array)
     final_array = array
+    
+    #Add Titles of columns & Print each name (keys) and mail (values) in the file
     CSV.open("db/emails.csv", "w") do |csv|
     csv << ["Nom des Mairies", "Emails des Mairies"]
     final_array.each do |x|
@@ -95,6 +106,7 @@ class Scrapper
     end
   end
 
+  #Perform the all class Scrapper with a MENU with choices
   def perform
     puts "Salut, sous quel format veux tu scrapper les addresses Emails ? (entre seulement le chiffre"
 
