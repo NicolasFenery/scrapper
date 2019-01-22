@@ -108,7 +108,7 @@ class Scrapper
 
   #Perform the all class Scrapper with a MENU with choices
   def perform
-    puts "Salut, sous quel format veux tu scrapper les addresses Emails ? (entre seulement le chiffre"
+    puts "Salut, sous quel format veux tu scrapper les adresses Emails ? (entre seulement le chiffre)"
 
     puts "1: Format JSON"
     puts "2: Google Spreadsheet"
